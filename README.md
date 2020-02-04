@@ -1,4 +1,7 @@
 # SMAL
+
+[![Build Status](https://travis-ci.org/mossseank/SMAL.svg?branch=master)](https://travis-ci.org/mossseank/SMAL)
+
 Simple Managed Audio Library - no frills library for decoding and encoding audio in pure managed .NET.
 
 The API is well documented, and examples/tutorials can be found on the [project wiki](https://github.com/mossseank/SMAL/wiki).
@@ -14,7 +17,7 @@ In order to keep the implementation simple and straitforward, some limitations a
 
 1. Audio streams will not support arbitrary seeking, only forward reading.
 2. For the Wave format, only common encodings (e.g. PCM and IEEE) are supported.
-3. All audio samples are decoded into signed 16-bit integer or normalized IEEE 32-bit float LPCM.
+3. All audio samples are decoded into signed 16-bit integer or normalized IEEE 32-bit float interleaved LPCM.
 
 ## Format Support
 

@@ -9,7 +9,7 @@
     <PackageProjectUrl>https://github.com/mossseank/SMAL</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mossseank/SMAL</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
-    <PackageTags>audio, encoding, decoding</PackageTags>
+    <PackageTags>audio,encoding,decoding,wave,ogg-vorbis,vorbis,flac</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
