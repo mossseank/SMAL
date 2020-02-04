@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Version>0.1.0</Version>
+    <Authors>Sean Moss</Authors>
+    <Description>No frills library for decoding and encoding audio in pure managed .NET.</Description>
+    <Copyright>(c) 2020 SMAL Authors</Copyright>
+    <PackageProjectUrl>https://github.com/mossseank/SMAL</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/mossseank/SMAL</RepositoryUrl>
+    <RepositoryType>Git</RepositoryType>
+    <PackageTags>audio, encoding, decoding</PackageTags>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+</Project>
