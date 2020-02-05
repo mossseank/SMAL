@@ -18,18 +18,28 @@ In order to keep the implementation simple and straitforward, some limitations a
 1. Audio streams will not support arbitrary seeking, only forward reading.
 2. For the Wave format, only common encodings (e.g. PCM and IEEE) are supported.
 3. All audio samples are decoded into signed 16-bit integer or normalized IEEE 32-bit float interleaved LPCM.
+4. Minimal checks are done for file validity - it is assumed that files are well structured and standard compliant.
 
 ## Format Support
 
+Support matrix for audio encoding formats:
+
 |Format|Decode|Encode|
 |:----:|:----:|:----:|
-|**RAW**|*Planned*|*Planned*|
-|**Wave**|*Planned*|*Planned*|
+|**Wave<sup>1</sup>**|*Planned*|*Planned*|
 |**Vorbis**|*Planned*|*Planned*|
 |**FLAC**|*Planned*|*Planned*|
 |**Opus**|*Planned*|*Planned*|
-|**RLAD<sup>1</sup>**|*Planned*|*Planned*|
+|**[RLAD](https://github.com/mossseank/SMAL/wiki/RLAD)**|*Planned*|*Planned*|
+
+Support matrix for container file formats:
+
+|Format|Encoding|Decode|Encode|
+|:----:|:------:|:----:|:----:|
+|**RIFF**|Wave<sup>1</sup>|*Planned*|*Planned*|
+|**Ogg**|Vorbis, FLAC, Opus|*Planned*|*Planned*|
+|**RLAD**|RLAD|*Planned*|*Planned*|
+
+<sup>1</sup><small>*Wave is a file format that supports many encodings - only the most common ones are implemented.*</small>
 
 This is the core set of planned formats. Pull requests are encouraged to add support for more formats, or to help implement or augment existing formats. Only formats that are unencumbered by restrictive licenses and patents will be accepted.
-
-<sup>1</sup><small>RLAD (Run-Length Accumulating Deltas) on [the wiki](https://github.com/mossseank/SMAL/wiki/RLAD).</small>
