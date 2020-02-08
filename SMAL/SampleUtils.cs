@@ -16,7 +16,7 @@ namespace SMAL
 	public static class SampleUtils
 	{
 		/// <summary>
-		/// Convers a span of signed 16-bit integer samples into normalized 32-bit floating point samples.
+		/// Converts a span of signed 16-bit integer samples into normalized 32-bit floating point samples.
 		/// <para>
 		/// This function uses hardware intrinsics on systems that support them.
 		/// </para>
@@ -90,7 +90,7 @@ namespace SMAL
 		}
 
 		/// <summary>
-		/// Convers a span of normalized 32-bit floating point samples into signed 16-bit integer samples.
+		/// Converts a span of normalized 32-bit floating point samples into signed 16-bit integer samples.
 		/// <para>
 		/// This function uses hardware intrinsics on systems that support them.
 		/// </para>
