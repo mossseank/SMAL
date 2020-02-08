@@ -5,7 +5,6 @@
  */
 using System;
 using System.IO;
-using System.Runtime.InteropServices;
 
 namespace SMAL
 {
@@ -19,11 +18,16 @@ namespace SMAL
 		/// <summary>
 		/// The source audio encoding that this decoder processes.
 		/// </summary>
-		public abstract AudioEncoding SourceEncoding { get; }
+		public abstract AudioEncoding Encoding { get; }
 		/// <summary>
-		/// Gets the number of audio channels for this decoder.
+		/// Gets the audio channel layout for this decoder.
 		/// </summary>
-		public abstract uint ChannelCount { get; }
+		public abstract AudioChannels Channels { get; }
+
+		/// <summary>
+		/// The number of channels (samples per frame) for this decoder.
+		/// </summary>
+		public uint ChannelCount => (uint)Channels;
 
 		#region Buffer
 		/// <summary>
@@ -49,9 +53,9 @@ namespace SMAL
 		/// </summary>
 		protected uint BufferOffset { get; private set; }
 		/// <summary>
-		/// The number of frames remaining in <see cref="Buffer"/> for reading.
+		/// The number of frames remaining for reading within the internal buffer.
 		/// </summary>
-		protected uint BufferRemaining => BufferCount - BufferOffset;
+		public uint BufferRemaining => BufferCount - BufferOffset;
 		/// <summary>
 		/// If the samples in <see cref="Buffer"/> are floats, <c>false</c> implies they are shorts.
 		/// </summary>
@@ -104,7 +108,7 @@ namespace SMAL
 			if (size > (ulong)_buffer.LongLength)
 			{
 				throw new InsufficientMemoryException(
-					$"Sample count ({(isFloat?"float":"short")}[{frameCount}][{ChannelCount}]) " +
+					$"Sample count ({Channels} {(isFloat?"float":"short")}[{frameCount}]) " +
 					$"is too large for buffer ({_buffer.Length})");
 			}
 
@@ -206,7 +210,10 @@ namespace SMAL
 		/// appropriate call to <see cref="SetBufferCount"/> should be made.
 		/// </summary>
 		/// <param name="stream">The stream to read data from.</param>
-		/// <param name="buffer">The buffer to write decoded samples into.</param>
+		/// <param name="buffer">
+		/// The buffer to write decoded samples into. Buffer is guarenteed to be large enough to fit
+		/// <paramref name="frameCount"/> frames, taking into account <paramref name="isFloat"/>.
+		/// </param>
 		/// <param name="frameCount">The number of audio frames to read.</param>
 		/// <param name="isFloat">
 		/// If <paramref name="buffer"/> is expecting the samples to be floats, <c>false</c> implies shorts.
