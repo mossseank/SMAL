@@ -19,27 +19,30 @@ In order to keep the implementation simple and straitforward, some limitations a
 2. For the Wave format, only common encodings (e.g. PCM and IEEE) are supported.
 3. All audio samples are decoded into signed 16-bit integer or normalized IEEE 32-bit float interleaved LPCM.
 4. Minimal checks are done for file validity - it is assumed that files are well structured and standard compliant.
+5. Metadata (artist, title, ect...) is not loaded, and will not be written by encoders. This is planned for a future version.
 
 ## Format Support
 
 Support matrix for audio encoding formats:
 
-|Format|Decode|Encode|
-|:----:|:----:|:----:|
-|**Wave<sup>1</sup>**|*Planned*|*Planned*|
-|**Vorbis**|*Planned*|*Planned*|
-|**FLAC**|*Planned*|*Planned*|
-|**Opus**|*Planned*|*Planned*|
-|**[RLAD](https://github.com/mossseank/SMAL/wiki/RLAD)**|*Planned*|*Planned*|
+|Format|Encoding|Decode|Encode|
+|:----:|:------:|:----:|:----:|
+|**Wave/RAW**|LPCM (16-bit)|v0.1|*Planned*|
+||IeeeFloat (32-bit)|v0.1|*Planned*|
+||A-Law|*Planned*|*Planned*|
+||Mu-Law|*Planned*|*Planned*|
+|**Vorbis**|Vorbis|*Planned*|*Planned*|
+|**FLAC**|FLAC|*Planned*|*Planned*|
+|**Opus**|Opus|*Planned*|*Planned*|
+|**[RLAD](https://github.com/mossseank/SMAL/wiki/RLAD)**|Lossless|*Planned*|*Planned*|
+||Lossy|*Planned*|*Planned*|
 
 Support matrix for container file formats:
 
 |Format|Encoding|Decode|Encode|
 |:----:|:------:|:----:|:----:|
-|**RIFF**|Wave<sup>1</sup>|*Planned*|*Planned*|
+|**RIFF**|Wave/RAW|*Planned*|*Planned*|
 |**Ogg**|Vorbis, FLAC, Opus|*Planned*|*Planned*|
 |**RLAD**|RLAD|*Planned*|*Planned*|
-
-<sup>1</sup><small>*Wave is a file format that supports many encodings - only the most common ones are implemented.*</small>
 
 This is the core set of planned formats. Pull requests are encouraged to add support for more formats, or to help implement or augment existing formats. Only formats that are unencumbered by restrictive licenses and patents will be accepted.

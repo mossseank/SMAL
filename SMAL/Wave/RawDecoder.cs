@@ -29,7 +29,7 @@ namespace SMAL.Wave
 		#endregion // Fields
 
 		/// <summary>
-		/// Creates a new decoder that can decode audio data of the given format and channel count.
+		/// Initializes a decoder that can decode audio data of the given format and channel count.
 		/// </summary>
 		/// <param name="encoding">The encoding format to decode from. Must be a RAW format.</param>
 		/// <param name="channels">The channel layout of the data to decode.</param>
