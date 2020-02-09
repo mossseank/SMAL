@@ -5,6 +5,7 @@
  */
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace SMAL
 {
@@ -44,29 +45,7 @@ namespace SMAL
 		/// </summary>
 		protected Span<short> ShortBuffer => _buffer.AsSpan().UnsafeCast<short>();
 
-		/// <summary>
-		/// The total number of audio frames currently available in <see cref="Buffer"/>.
-		/// </summary>
-		protected uint BufferCount { get; private set; }
-		/// <summary>
-		/// The current read position within <see cref="Buffer"/>, in frames.
-		/// </summary>
-		protected uint BufferOffset { get; private set; }
-		/// <summary>
-		/// The number of frames remaining for reading within the internal buffer.
-		/// </summary>
-		public uint BufferRemaining => BufferCount - BufferOffset;
-		/// <summary>
-		/// If the samples in <see cref="Buffer"/> are floats, <c>false</c> implies they are shorts.
-		/// </summary>
-		protected bool BufferIsFloat { get; private set; }
-
-		/// <summary>
-		/// The size of a single audio frame in the buffer, a function of the channel count and buffer format.
-		/// </summary>
-		protected uint BufferFrameSize => ChannelCount * (BufferIsFloat ? 4u : 2u);
-
-		private readonly byte[] _buffer; // Internal sample decode buffer
+		private byte[] _buffer; // Internal general-use buffer for decoding operations
 		#endregion // Buffer
 
 		/// <summary>
@@ -78,16 +57,10 @@ namespace SMAL
 		/// <summary>
 		/// Initializes the components of the base decoder type.
 		/// </summary>
-		/// <param name="bufferSize">
-		/// The size (in bytes) of the internal frame buffer. This should be equal to the maximum number of bytes
-		/// that the decoded format should ever have to buffer.
-		/// </param>
+		/// <param name="bufferSize">The initial size of the internal general-use buffer.</param>
 		protected AudioDecoder(uint bufferSize)
 		{
 			_buffer = new byte[bufferSize];
-			BufferCount = 0;
-			BufferOffset = 0;
-			BufferIsFloat = false;
 		}
 		~AudioDecoder()
 		{
@@ -97,129 +70,83 @@ namespace SMAL
 		}
 
 		/// <summary>
-		/// Called to set the number and type of frames available in the internal buffer.
+		/// Ensures that the internal buffer is at least the given number of bytes.
 		/// </summary>
-		/// <param name="frameCount">The number of frames to mark as available in the buffer.</param>
-		/// <param name="isFloat">If the buffered samples are floats, otherwise they are shorts.</param>
-		/// <exception cref="InsufficientMemoryException">The internal buffer is too small.</exception>
-		protected void SetBufferCount(uint frameCount, bool isFloat)
+		/// <param name="size">The minimum size of the buffer, in bytes.</param>
+		/// <param name="keep">If the existing data in the buffer should be kept.</param>
+		/// <returns>If the buffer was resized.</returns>
+		protected unsafe bool EnsureBufferSize(uint size, bool keep = false)
 		{
-			ulong size = frameCount * (ulong)BufferFrameSize;
-			if (size > (ulong)_buffer.LongLength)
+			if ((uint)_buffer.LongLength < size)
 			{
-				throw new InsufficientMemoryException(
-					$"Sample count ({Channels} {(isFloat?"float":"short")}[{frameCount}]) " +
-					$"is too large for buffer ({_buffer.Length})");
+				var nb = new byte[size];
+				if (keep)
+				{
+					fixed (byte* dst = nb, src = _buffer)
+						Unsafe.CopyBlock(dst, src, size);
+				}
+				_buffer = nb;
+				return true;
 			}
-
-			BufferCount = frameCount;
-			BufferOffset = 0;
-			BufferIsFloat = isFloat;
+			return false;
 		}
 
 		#region Decode
 		/// <summary>
-		/// Decodes samples from the stream into the buffer. The stream should already be at the start of the audio
-		/// data, any frames or containers from the stream format should already be parsed.
+		/// Decodes the data from the source span into the destination span. The destination span will be rounded down
+		/// to a multiple of <see cref="ChannelCount"/>, if needed.
 		/// </summary>
-		/// <param name="stream">The stream to decode samples from.</param>
-		/// <param name="buffer">
-		/// The buffer to write signed 16-bit integer LPCM samples into. The length will be rounded down to a multiple
-		/// of <see cref="ChannelCount"/>, if needed.
-		/// </param>
-		/// <returns>The total number of audio <c>(frames, samples)</c> read.</returns>
-		public (uint Frames, uint Samples) Decode(Stream stream, Span<short> buffer)
+		/// <remarks>
+		/// The source should only contain the raw audio data in the expected format - headers and frame-based formats 
+		/// should have already parsed this information and made it available for use.
+		/// </remarks>
+		/// <param name="src">The raw format source data, without any header/frame data, where applicable.</param>
+		/// <param name="dst">The destination for decoded 32-bit floating point interleaved LPCM samples.</param>
+		/// <returns>The actual number of audio <em>frames</em> decoded.</returns>
+		public uint Decode(Span<byte> src, Span<float> dst)
 		{
-			if (stream is null)
-				throw new ArgumentNullException(nameof(stream));
-			
-			buffer = buffer.Slice(0, buffer.Length - (int)(buffer.Length % ChannelCount));
-			uint fcount = (uint)buffer.Length / ChannelCount;
-
-			// Read buffer first
-			uint read = readBuffer(buffer.AsBytesUnsafe(), fcount, false);
-			if (read == fcount)
-				return (fcount, fcount * ChannelCount);
-			buffer = buffer.Slice((int)(read * ChannelCount));
-
-			// Decode
-			read += DecodeStream(stream, buffer.AsBytesUnsafe(), fcount - read, false);
-			return (read, read * ChannelCount);
-		}
-
-		/// <summary>
-		/// Decodes samples from the stream into the buffer. The stream should already be at the start of the audio
-		/// data, any frames or containers from the stream format should already be parsed.
-		/// </summary>
-		/// <param name="stream">The stream to decode samples from.</param>
-		/// <param name="buffer">
-		/// The buffer to write signed 32-bit floating point LPCM samples into. The length will be rounded down to a 
-		/// multiple of <see cref="ChannelCount"/>, if needed.
-		/// </param>
-		/// <returns>The total number of audio <c>(frames, samples)</c> read.</returns>
-		public (uint Frames, uint Samples) Decode(Stream stream, Span<float> buffer)
-		{
-			if (stream is null)
-				throw new ArgumentNullException(nameof(stream));
-
-			buffer = buffer.Slice(0, buffer.Length - (int)(buffer.Length % ChannelCount));
-			uint fcount = (uint)buffer.Length / ChannelCount;
-
-			// Read buffer first
-			uint read = readBuffer(buffer.AsBytesUnsafe(), fcount, true);
-			if (read == fcount)
-				return (fcount, fcount * ChannelCount);
-			buffer = buffer.Slice((int)(read * ChannelCount));
-
-			// Decode
-			read += DecodeStream(stream, buffer.AsBytesUnsafe(), fcount - read, true);
-			return (read, read * ChannelCount);
-		}
-
-		// Reads remaining frames into the buffer, returns the number of frames read
-		private uint readBuffer(Span<byte> buffer, uint frameCount, bool isFloat)
-		{
-			uint toRead = Math.Min(BufferRemaining, frameCount);
-			if (toRead == 0)
+			if (src.Length == 0)
 				return 0;
 
-			if (BufferIsFloat)
-			{
-				var src = FloatBuffer.Slice((int)(BufferOffset * ChannelCount), (int)(toRead * ChannelCount));
-				if (isFloat) // float -> float
-					src.CopyTo(buffer.UnsafeCast<float>());
-				else // float -> short
-					SampleUtils.Convert(src, buffer.UnsafeCast<short>());
-			}
-			else
-			{
-				var src = ShortBuffer.Slice((int)(BufferOffset * ChannelCount), (int)(toRead * ChannelCount));
-				if (!isFloat) // short -> short
-					src.CopyTo(buffer.UnsafeCast<short>());
-				else // short -> float
-					SampleUtils.Convert(src, buffer.UnsafeCast<float>());
-			}
-
-			BufferOffset += toRead;
-			return toRead;
+			dst = dst.Slice(0, dst.Length - (int)(dst.Length % ChannelCount));
+			uint fcount = (uint)dst.Length / ChannelCount;
+			return Decode(src, dst.AsBytesUnsafe(), fcount, true);
 		}
 
 		/// <summary>
-		/// Performs the reading of the stream to decode the data into interleaved linear pcm samples. Samples that are
-		/// decoded, but not placed into <paramref name="buffer"/>, should be written to <see cref="Buffer"/>, and an
-		/// appropriate call to <see cref="SetBufferCount"/> should be made.
+		/// Decodes the data from the source span into the destination span. The destination span will be rounded down
+		/// to a multiple of <see cref="ChannelCount"/>, if needed.
 		/// </summary>
-		/// <param name="stream">The stream to read data from.</param>
-		/// <param name="buffer">
-		/// The buffer to write decoded samples into. Buffer is guarenteed to be large enough to fit
-		/// <paramref name="frameCount"/> frames, taking into account <paramref name="isFloat"/>.
+		/// <remarks>
+		/// The source should only contain the raw audio data in the expected format - headers and frame-based formats 
+		/// should have already parsed this information and made it available for use.
+		/// </remarks>
+		/// <param name="src">The raw format source data, without any header/frame data, where applicable.</param>
+		/// <param name="dst">The destination for decoded 16-bit signed integer interleaved LPCM samples.</param>
+		/// <returns>The actual number of audio <em>frames</em> decoded.</returns>
+		public uint Decode(Span<byte> src, Span<short> dst)
+		{
+			if (src.Length == 0)
+				return 0;
+
+			dst = dst.Slice(0, dst.Length - (int)(dst.Length % ChannelCount));
+			uint fcount = (uint)dst.Length / ChannelCount;
+			return Decode(src, dst.AsBytesUnsafe(), fcount, false);
+		}
+
+		/// <summary>
+		/// Implements the decoding for the given format.
+		/// </summary>
+		/// <param name="src">The raw source format data.</param>
+		/// <param name="dst">
+		/// The destination for the decoded samples, should be written as the type implied by 
+		/// <paramref name="isFloat"/>. Its size will be pre-adjusted to be a multiple of <see cref="ChannelCount"/>,
+		/// and it will be big enough to accept the number of frames in <paramref name="frameCount"/>.
 		/// </param>
-		/// <param name="frameCount">The number of audio frames to read.</param>
-		/// <param name="isFloat">
-		/// If <paramref name="buffer"/> is expecting the samples to be floats, <c>false</c> implies shorts.
-		/// </param>
-		/// <returns>The total number of audio frames read from the stream into <paramref name="buffer"/>.</returns>
-		protected abstract uint DecodeStream(Stream stream, Span<byte> buffer, uint frameCount, bool isFloat);
+		/// <param name="frameCount">The target number of frames to decode.</param>
+		/// <param name="isFloat">If the decoded data is expected as <c>float</c>, otherwise <c>short</c>.</param>
+		/// <returns>The actual number of decoded audio frames.</returns>
+		protected abstract uint Decode(Span<byte> src, Span<byte> dst, uint frameCount, bool isFloat);
 		#endregion // Decode
 
 		#region IDisposable
