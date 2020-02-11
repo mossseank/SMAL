@@ -35,7 +35,7 @@ Support matrix for audio encoding formats:
 |**FLAC**|FLAC|*Planned*|*Planned*|
 |**Opus**|Opus|*Planned*|*Planned*|
 |**[RLAD](https://github.com/mossseank/SMAL/wiki/RLAD)**|Lossless|v0.1|*Planned*|
-||Lossy|*Planned*|*Planned*|
+||Lossy|v0.1|*Planned*|
 
 Support matrix for container file formats:
 

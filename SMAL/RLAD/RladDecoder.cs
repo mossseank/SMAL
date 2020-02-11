@@ -5,6 +5,8 @@
  */
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 
 namespace SMAL.RLAD
 {
@@ -55,8 +57,6 @@ namespace SMAL.RLAD
 				throw new InvalidOperationException("No block header provided for RLAD decoder");
 			if (src.Length < BlockHeader.Value.DataSize)
 				throw new IncompleteDataException("RLAD data decode", BlockHeader.Value.DataSize - (uint)src.Length);
-			if (!Lossless)
-				throw new NotImplementedException("Lossy RLAD decoding not yet implemented");
 
 			fixed (short* writePtr = isFloat ? ShortBuffer : dst.UnsafeCast<short>())
 			fixed (byte* readPtr = src)
@@ -73,23 +73,47 @@ namespace SMAL.RLAD
 					short sum = BlockHeader.Value.GetChannelSeed(chan);
 					foreach (var run in runs)
 					{
-						if (run.Type == 0) // Tiny (4 bps)
+						int bps = run.Type switch { 
+							0 => Lossless ? 4 : 2,
+							1 => Lossless ? 8 : 4,
+							2 => Lossless ? 12 : 8,
+							3 => Lossless ? 16 : 12,
+							_ => throw new Exception("Never reached")
+						};
+
+						if (bps == 2) // Tiny Lossy
+						{
+							for (int ch = 0; ch < run.Count; ++ch)
+							{
+								ushort p0 = *((ushort*)srcPtr + ch);
+
+								*(dstPtr += stride) = (sum += (short)(((p0 >>  0) & 0x3) - 2));
+								*(dstPtr += stride) = (sum += (short)(((p0 >>  2) & 0x3) - 2));
+								*(dstPtr += stride) = (sum += (short)(((p0 >>  4) & 0x3) - 2));
+								*(dstPtr += stride) = (sum += (short)(((p0 >>  6) & 0x3) - 2));
+								*(dstPtr += stride) = (sum += (short)(((p0 >>  8) & 0x3) - 2));
+								*(dstPtr += stride) = (sum += (short)(((p0 >> 10) & 0x3) - 2));
+								*(dstPtr += stride) = (sum += (short)(((p0 >> 12) & 0x3) - 2));
+								*(dstPtr += stride) = (sum += (short)(((p0 >> 14) & 0x3) - 2));
+							}
+						}
+						else if (bps == 4) // Tiny Lossless or Small Lossy
 						{
 							for (int ch = 0; ch < run.Count; ++ch)
 							{
 								uint p0 = *((uint*)srcPtr + ch);
 
-								*(dstPtr += stride) = (sum += (short)(((p0 >>  0) & 0xF) - 8));
-								*(dstPtr += stride) = (sum += (short)(((p0 >>  4) & 0xF) - 8));
-								*(dstPtr += stride) = (sum += (short)(((p0 >>  8) & 0xF) - 8));
-								*(dstPtr += stride) = (sum += (short)(((p0 >> 12) & 0xF) - 8));
-								*(dstPtr += stride) = (sum += (short)(((p0 >> 16) & 0xF) - 8));
-								*(dstPtr += stride) = (sum += (short)(((p0 >> 20) & 0xF) - 8));
-								*(dstPtr += stride) = (sum += (short)(((p0 >> 24) & 0xF) - 8));
-								*(dstPtr += stride) = (sum += (short)(((p0 >> 28) & 0xF) - 8));
+								*(dstPtr += stride) = (sum += (short)((int)((p0 >>  0) & 0xF) - 8));
+								*(dstPtr += stride) = (sum += (short)((int)((p0 >>  4) & 0xF) - 8));
+								*(dstPtr += stride) = (sum += (short)((int)((p0 >>  8) & 0xF) - 8));
+								*(dstPtr += stride) = (sum += (short)((int)((p0 >> 12) & 0xF) - 8));
+								*(dstPtr += stride) = (sum += (short)((int)((p0 >> 16) & 0xF) - 8));
+								*(dstPtr += stride) = (sum += (short)((int)((p0 >> 20) & 0xF) - 8));
+								*(dstPtr += stride) = (sum += (short)((int)((p0 >> 24) & 0xF) - 8));
+								*(dstPtr += stride) = (sum += (short)((int)((p0 >> 28) & 0xF) - 8));
 							}
 						}
-						else if (run.Type == 1) // Small (8 bps)
+						else if (bps == 8) // Small Lossless or Medium Lossy
 						{
 							sbyte* sbtSrc = (sbyte*)srcPtr;
 
@@ -105,7 +129,7 @@ namespace SMAL.RLAD
 								*(dstPtr += stride) = (sum += sbtSrc[7]);
 							}
 						}
-						else if (run.Type == 2) // Medium (12 bps)
+						else if (bps == 12) // Medium Lossless or Full Lossy
 						{
 							uint* intPtr = (uint*)srcPtr;
 
@@ -115,17 +139,17 @@ namespace SMAL.RLAD
 								uint p1 = intPtr[1];
 								uint p2 = intPtr[2];
 
-								*(dstPtr += stride) = (sum += (short)((( p0 >>  0              ) & 0xFFF) - 2048));
-								*(dstPtr += stride) = (sum += (short)((( p0 >> 12              ) & 0xFFF) - 2048));
-								*(dstPtr += stride) = (sum += (short)((((p0 & 0xFF000000) >> 24) | ((p1 & 0x0000000F) << 8)) - 2048));
-								*(dstPtr += stride) = (sum += (short)((( p1 >>  4              ) & 0xFFF) - 2048));
-								*(dstPtr += stride) = (sum += (short)((( p1 >> 16              ) & 0xFFF) - 2048));
-								*(dstPtr += stride) = (sum += (short)((((p1 >> 28) | (p2 <<  8)) & 0xFFF) - 2048));
-								*(dstPtr += stride) = (sum += (short)((( p2 >>  8              ) & 0xFFF) - 2048));
-								*(dstPtr += stride) = (sum += (short)((( p2 >> 20              ) & 0xFFF) - 2048));
+								*(dstPtr += stride) = (sum += (short)((int)(( p0 >>  0              ) & 0xFFF) - 2048));
+								*(dstPtr += stride) = (sum += (short)((int)(( p0 >> 12              ) & 0xFFF) - 2048));
+								*(dstPtr += stride) = (sum += (short)((int)(((p0 >> 24) | (p1 <<  8)) & 0xFFF) - 2048));
+								*(dstPtr += stride) = (sum += (short)((int)(( p1 >>  4              ) & 0xFFF) - 2048));
+								*(dstPtr += stride) = (sum += (short)((int)(( p1 >> 16              ) & 0xFFF) - 2048));
+								*(dstPtr += stride) = (sum += (short)((int)(((p1 >> 28) | (p2 <<  4)) & 0xFFF) - 2048));
+								*(dstPtr += stride) = (sum += (short)((int)(( p2 >>  8              ) & 0xFFF) - 2048));
+								*(dstPtr += stride) = (sum += (short)((int)(( p2 >> 20              ) & 0xFFF) - 2048));
 							}
 						}
-						else if (run.Type == 3) // Full (16 bps)
+						else // Full Lossless (16 bps)
 						{
 							short* srtSrc = (short*)srcPtr;
 
@@ -142,7 +166,50 @@ namespace SMAL.RLAD
 							}
 						}
 
-						srcPtr += (run.Count * (run.Type + 1) * 4); // Move down the source data
+						srcPtr += (uint)(bps * run.Count); // Move down the source data
+					}
+				}
+			}
+
+			// For lossy data, need to convert [-2048,2047] -> [-32768,32767] (mult 16, lshift 4)
+			if (!Lossless)
+			{
+				uint total = ChannelCount * 512;
+				uint count = 0;
+
+				fixed (short* sampPtr = isFloat ? ShortBuffer : dst.UnsafeCast<short>())
+				{
+					if (Avx2.IsSupported)
+					{
+						while ((count + 16) <= total)
+						{
+							Vector256<short>* samp = (Vector256<short>*)(sampPtr + count);
+							Avx.Store(sampPtr + count, Avx2.ShiftLeftLogical(*samp, 4));
+							count += 16;
+						}
+					}
+					else if (Sse2.IsSupported)
+					{
+						while ((count + 8) <= total)
+						{
+							Vector128<short>* samp = (Vector128<short>*)(sampPtr + count);
+							Sse2.Store(sampPtr + count, Sse2.ShiftLeftLogical(*samp, 4));
+							count += 8;
+						}
+					}
+					else // Loop fallback - TODO: Arm intrinsics
+					{
+						while (count < total)
+						{
+							sampPtr[count++] <<= 4;
+							sampPtr[count++] <<= 4;
+							sampPtr[count++] <<= 4;
+							sampPtr[count++] <<= 4;
+							sampPtr[count++] <<= 4;
+							sampPtr[count++] <<= 4;
+							sampPtr[count++] <<= 4;
+							sampPtr[count++] <<= 4;
+						}
 					}
 				}
 			}
