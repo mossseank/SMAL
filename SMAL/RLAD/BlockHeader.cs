@@ -26,11 +26,9 @@ namespace SMAL.RLAD
 		/// The total size of the compressed audio data in the block, in bytes.
 		/// </summary>
 		public ushort DataSize;
-		/// <summary>
-		/// The number of runs in each channel.
-		/// </summary>
-		public fixed byte RunCounts[MAX_CHANNELS];
-
+		
+		private fixed byte _counts[MAX_CHANNELS];
+		private fixed short _seeds[MAX_CHANNELS];
 		private fixed byte _headers[MAX_RUNS_PER_CHANNEL * MAX_CHANNELS];
 		#endregion // Fields
 
@@ -40,8 +38,18 @@ namespace SMAL.RLAD
 		/// <param name="channel">The channel to get, must be in the range [0, 7].</param>
 		/// <returns>The run headers for the channel data.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Span<RunHeader> GetChannel(byte channel) => (channel < 8)
-			? new Span<RunHeader>(Unsafe.AsPointer(ref _headers[channel * MAX_RUNS_PER_CHANNEL]), RunCounts[0])
+		public Span<RunHeader> GetChannelHeaders(byte channel) => (channel < 8)
+			? new Span<RunHeader>(Unsafe.AsPointer(ref _headers[channel * MAX_RUNS_PER_CHANNEL]), _counts[channel])
+			: throw new ArgumentOutOfRangeException(nameof(channel));
+
+		/// <summary>
+		/// Gets the seed value (initial sample amplitude) for the passed channel index.
+		/// </summary>
+		/// <param name="channel">The channel to get, must be in the range [0, 7].</param>
+		/// <returns>The seed value for the channel.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public short GetChannelSeed(byte channel) => (channel < 8)
+			? _seeds[channel]
 			: throw new ArgumentOutOfRangeException(nameof(channel));
 
 		/// <summary>
@@ -64,8 +72,14 @@ namespace SMAL.RLAD
 			block.DataSize = header[1];
 			read += 4;
 
+			// Read the sample seeds
+			var seeds = new Span<short>(Unsafe.AsPointer(ref block._seeds[0]), (int)channels);
+			if (stream.Read(seeds.AsBytesUnsafe()) != (seeds.Length * 2))
+				throw new IncompleteHeaderException("RLAD block - channel seed values");
+			read += ((uint)channels * 2);
+
 			// Read the run counts
-			var counts = new Span<byte>(Unsafe.AsPointer(ref block.RunCounts[0]), (int)channels);
+			var counts = new Span<byte>(Unsafe.AsPointer(ref block._counts[0]), (int)channels);
 			if (stream.Read(counts) != counts.Length)
 				throw new IncompleteHeaderException("RLAD block - run header counts");
 			read += (uint)channels;
@@ -101,8 +115,13 @@ namespace SMAL.RLAD
 			stream.Write(header.AsBytesUnsafe());
 			written += 4;
 
+			// Write the sample seeds
+			var seeds = new ReadOnlySpan<short>(Unsafe.AsPointer(ref block._seeds[0]), (int)channels);
+			stream.Write(seeds.AsBytesUnsafe());
+			written += ((uint)channels * 2);
+
 			// Write the run counts
-			var counts = new ReadOnlySpan<byte>(Unsafe.AsPointer(ref block.RunCounts[0]), (int)channels);
+			var counts = new ReadOnlySpan<byte>(Unsafe.AsPointer(ref block._counts[0]), (int)channels);
 			stream.Write(counts);
 			written += (uint)channels;
 

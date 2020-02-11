@@ -13,8 +13,6 @@ namespace SMAL.Wave
 	/// </summary>
 	public sealed class RawDecoder : AudioDecoder
 	{
-		private const uint LOOP_FRAME_COUNT = 256;
-
 		#region Fields
 		/// <inheritdoc/>
 		public override AudioEncoding Encoding { get; }

@@ -29,11 +29,11 @@ namespace SMAL.RLAD
 		/// <summary>
 		/// The total number of chunks (8-sample groups) in the run.
 		/// </summary>
-		public readonly int Count => Value & 0x3F;
+		public readonly int Count => (Value & 0x3F) + 1;
 		/// <summary>
 		/// The total number of samples in the run (chunk count * 8).
 		/// </summary>
-		public readonly int TotalSamples => (Value & 0x3F) * 8;
+		public readonly int TotalSamples => ((Value & 0x3F) + 1) * 8;
 		#endregion // Fields
 
 		/// <summary>

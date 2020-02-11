@@ -31,6 +31,22 @@ namespace SMAL
 		}
 
 		/// <summary>
+		/// Performs a fast, but unsafe, cast from a byte span to a span of another type. This call bypasses the normal
+		/// checks for references within <typeparamref name="TTo"/>.
+		/// </summary>
+		/// <typeparam name="TTo">The cast destination type, which <em>must not</em> contain references.</typeparam>
+		/// <param name="src">The span to cast.</param>
+		/// <returns>The source span reinterpreted to a new type.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ReadOnlySpan<TTo> UnsafeCast<TTo>(this ReadOnlySpan<byte> src)
+			where TTo : struct
+		{
+			ulong length = (ulong)src.Length / (ulong)Unsafe.SizeOf<TTo>();
+			return (length == 0) ? ReadOnlySpan<TTo>.Empty : MemoryMarshal.CreateReadOnlySpan(
+				ref Unsafe.As<byte, TTo>(ref MemoryMarshal.GetReference(src)), (int)length);
+		}
+
+		/// <summary>
 		/// Performs a fast, but unsafe, cast from a struct span to a byte span. This call bypasses the normal checks
 		/// for references within <typeparamref name="TFrom"/>.
 		/// </summary>
@@ -43,6 +59,22 @@ namespace SMAL
 		{
 			ulong length = (ulong)Unsafe.SizeOf<TFrom>() * (ulong)src.Length;
 			return (length == 0) ? Span<byte>.Empty : MemoryMarshal.CreateSpan(
+				ref Unsafe.As<TFrom, byte>(ref MemoryMarshal.GetReference(src)), (int)length);
+		}
+
+		/// <summary>
+		/// Performs a fast, but unsafe, cast from a struct span to a byte span. This call bypasses the normal checks
+		/// for references within <typeparamref name="TFrom"/>.
+		/// </summary>
+		/// <typeparam name="TFrom">The cast source type, which <em>must not</em> contain references.</typeparam>
+		/// <param name="src">The span to cast.</param>
+		/// <returns>The source span reinterpreted to a byte span.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ReadOnlySpan<byte> AsBytesUnsafe<TFrom>(this ReadOnlySpan<TFrom> src)
+			where TFrom : struct
+		{
+			ulong length = (ulong)Unsafe.SizeOf<TFrom>() * (ulong)src.Length;
+			return (length == 0) ? ReadOnlySpan<byte>.Empty : MemoryMarshal.CreateReadOnlySpan(
 				ref Unsafe.As<TFrom, byte>(ref MemoryMarshal.GetReference(src)), (int)length);
 		}
 	}
