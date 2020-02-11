@@ -27,8 +27,8 @@ Support matrix for audio encoding formats:
 
 |Format|Encoding|Decode|Encode|
 |:----:|:------:|:----:|:----:|
-|**Wave/RAW**|LPCM (16-bit)|v0.1|*Planned*|
-||IeeeFloat (32-bit)|v0.1|*Planned*|
+|**Wave/RAW**|LPCM (16-bit)|v0.1|v0.1|
+||IeeeFloat (32-bit)|v0.1|v0.1|
 ||A-Law|*Planned*|*Planned*|
 ||Mu-Law|*Planned*|*Planned*|
 |**Vorbis**|Vorbis|*Planned*|*Planned*|

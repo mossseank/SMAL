@@ -8,10 +8,10 @@ using System;
 namespace SMAL.Wave
 {
 	/// <summary>
-	/// Specialization of <see cref="AudioDecoder"/> that can decode raw audio data formats. This decoder can be used
+	/// Specialization of <see cref="AudioCodec"/> that can decode raw audio data formats. This decoder can be used
 	/// on raw PCM data, such as that found in Wave files.
 	/// </summary>
-	public sealed class RawDecoder : AudioDecoder
+	public sealed class RawCodec : AudioCodec
 	{
 		#region Fields
 		/// <inheritdoc/>
@@ -29,7 +29,7 @@ namespace SMAL.Wave
 		/// </summary>
 		/// <param name="encoding">The encoding format to decode from. Must be a RAW format.</param>
 		/// <param name="channels">The channel layout of the data to decode.</param>
-		public RawDecoder(AudioEncoding encoding, AudioChannels channels) :
+		public RawCodec(AudioEncoding encoding, AudioChannels channels) :
 			base(0)
 		{
 			Encoding = encoding;
@@ -68,6 +68,35 @@ namespace SMAL.Wave
 				decodeCount = 0;
 
 			return decodeCount;
+		}
+
+		protected override uint Encode(Span<byte> src, Span<byte> dst, uint frameCount, bool isFloat)
+		{
+			// Slice the source to the expected size
+			uint encodeCount = Math.Min(frameCount, (uint)dst.Length / _frameSize);
+			src = src.Slice(0, (int)(encodeCount * _frameSize));
+
+			// Split based on encoding type
+			if (isFloat)
+			{
+				if (Encoding == AudioEncoding.IeeeFloat) // float -> float
+					src.UnsafeCast<float>().CopyTo(dst.UnsafeCast<float>());
+				else if (Encoding == AudioEncoding.Pcm) // float -> short
+					SampleUtils.Convert(src.UnsafeCast<float>(), dst.UnsafeCast<short>());
+				else
+					encodeCount = 0;
+			}
+			else
+			{
+				if (Encoding == AudioEncoding.IeeeFloat) // short -> float
+					SampleUtils.Convert(src.UnsafeCast<short>(), dst.UnsafeCast<float>());
+				else if (Encoding == AudioEncoding.Pcm) // short -> short
+					src.UnsafeCast<short>().CopyTo(dst.UnsafeCast<short>());
+				else
+					encodeCount = 0;
+			}
+
+			return encodeCount;
 		}
 
 		protected override void OnDispose(bool disposing) { }

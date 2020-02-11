@@ -11,10 +11,10 @@ using System.Runtime.Intrinsics.X86;
 namespace SMAL.RLAD
 {
 	/// <summary>
-	/// Specialization of <see cref="AudioDecoder"/> that can decode both lossy and lossless RLAD (Run-Length
+	/// Specialization of <see cref="AudioCodec"/> that can decode both lossy and lossless RLAD (Run-Length
 	/// Accumulating Deltas) audio data.
 	/// </summary>
-	public sealed class RladDecoder : AudioDecoder
+	public sealed class RladCodec : AudioCodec
 	{
 		private const uint CHANNEL_LENGTH = 1024; // 512 samples of 2-byte data
 		private const uint CHUNK_SIZE = 8; // 8 samples per chunk
@@ -42,7 +42,7 @@ namespace SMAL.RLAD
 		/// </summary>
 		/// <param name="lossless">If the RLAD data is lossless, <c>false</c> implies lossy.</param>
 		/// <param name="channels">The channel layout of the data to decode.</param>
-		public RladDecoder(bool lossless, AudioChannels channels) :
+		public RladCodec(bool lossless, AudioChannels channels) :
 			base(CHANNEL_LENGTH * (uint)channels)
 		{
 			Lossless = lossless;
@@ -219,6 +219,12 @@ namespace SMAL.RLAD
 				SampleUtils.Convert(ShortBuffer, dst.UnsafeCast<float>());
 
 			return frameCount;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		protected override uint Encode(Span<byte> src, Span<byte> dst, uint frameCount, bool isFloat)
+		{
+			throw new NotImplementedException();
 		}
 
 		protected override void OnDispose(bool disposing) { }
