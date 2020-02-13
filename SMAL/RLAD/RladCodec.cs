@@ -1,4 +1,4 @@
-﻿/*
+/*
  * MIT License (MIT) - Copyright (c) 2020 SMAL Authors
  * This file is subject to the terms and conditions of the MIT License, the text of which can be found in the 'LICENSE'
  * file at the root of this repository, or online at <https://opensource.org/licenses/MIT>.
@@ -70,7 +70,7 @@ namespace SMAL.RLAD
 					short* dstPtr = writePtr + chan - stride; // start -stride to prevent off-by-one
 
 					var runs = BlockHeader.Value.GetChannelHeaders(chan);
-					short sum = BlockHeader.Value.GetChannelSeed(chan);
+					short sum = 0;
 					foreach (var run in runs)
 					{
 						int bps = run.Type switch { 
@@ -85,32 +85,32 @@ namespace SMAL.RLAD
 						{
 							for (int ch = 0; ch < run.Count; ++ch)
 							{
-								ushort p0 = *((ushort*)srcPtr + ch);
+								short p0 = *((short*)srcPtr + ch);
 
-								*(dstPtr += stride) = (sum += (short)(((p0 >>  0) & 0x3) - 2));
-								*(dstPtr += stride) = (sum += (short)(((p0 >>  2) & 0x3) - 2));
-								*(dstPtr += stride) = (sum += (short)(((p0 >>  4) & 0x3) - 2));
-								*(dstPtr += stride) = (sum += (short)(((p0 >>  6) & 0x3) - 2));
-								*(dstPtr += stride) = (sum += (short)(((p0 >>  8) & 0x3) - 2));
-								*(dstPtr += stride) = (sum += (short)(((p0 >> 10) & 0x3) - 2));
-								*(dstPtr += stride) = (sum += (short)(((p0 >> 12) & 0x3) - 2));
-								*(dstPtr += stride) = (sum += (short)(((p0 >> 14) & 0x3) - 2));
+								*(dstPtr += stride) = sum += (short)((p0 << 14) >> 14);
+								*(dstPtr += stride) = sum += (short)((p0 << 12) >> 14);
+								*(dstPtr += stride) = sum += (short)((p0 << 10) >> 14);
+								*(dstPtr += stride) = sum += (short)((p0 <<  8) >> 14);
+								*(dstPtr += stride) = sum += (short)((p0 <<  6) >> 14);
+								*(dstPtr += stride) = sum += (short)((p0 <<  4) >> 14);
+								*(dstPtr += stride) = sum += (short)((p0 <<  2) >> 14);
+								*(dstPtr += stride) = sum += (short)((p0 <<  0) >> 14);
 							}
 						}
 						else if (bps == 4) // Tiny Lossless or Small Lossy
 						{
 							for (int ch = 0; ch < run.Count; ++ch)
 							{
-								uint p0 = *((uint*)srcPtr + ch);
+								int p0 = *((int*)srcPtr + ch);
 
-								*(dstPtr += stride) = (sum += (short)((int)((p0 >>  0) & 0xF) - 8));
-								*(dstPtr += stride) = (sum += (short)((int)((p0 >>  4) & 0xF) - 8));
-								*(dstPtr += stride) = (sum += (short)((int)((p0 >>  8) & 0xF) - 8));
-								*(dstPtr += stride) = (sum += (short)((int)((p0 >> 12) & 0xF) - 8));
-								*(dstPtr += stride) = (sum += (short)((int)((p0 >> 16) & 0xF) - 8));
-								*(dstPtr += stride) = (sum += (short)((int)((p0 >> 20) & 0xF) - 8));
-								*(dstPtr += stride) = (sum += (short)((int)((p0 >> 24) & 0xF) - 8));
-								*(dstPtr += stride) = (sum += (short)((int)((p0 >> 28) & 0xF) - 8));
+								*(dstPtr += stride) = sum += (short)((p0 << 28) >> 28);
+								*(dstPtr += stride) = sum += (short)((p0 << 24) >> 28);
+								*(dstPtr += stride) = sum += (short)((p0 << 20) >> 28);
+								*(dstPtr += stride) = sum += (short)((p0 << 16) >> 28);
+								*(dstPtr += stride) = sum += (short)((p0 << 12) >> 28);
+								*(dstPtr += stride) = sum += (short)((p0 <<  8) >> 28);
+								*(dstPtr += stride) = sum += (short)((p0 <<  4) >> 28);
+								*(dstPtr += stride) = sum += (short)((p0 <<  0) >> 28);
 							}
 						}
 						else if (bps == 8) // Small Lossless or Medium Lossy
@@ -119,34 +119,35 @@ namespace SMAL.RLAD
 
 							for (int ch = 0; ch < run.Count; ++ch, sbtSrc += 8)
 							{
-								*(dstPtr += stride) = (sum += sbtSrc[0]);
-								*(dstPtr += stride) = (sum += sbtSrc[1]);
-								*(dstPtr += stride) = (sum += sbtSrc[2]);
-								*(dstPtr += stride) = (sum += sbtSrc[3]);
-								*(dstPtr += stride) = (sum += sbtSrc[4]);
-								*(dstPtr += stride) = (sum += sbtSrc[5]);
-								*(dstPtr += stride) = (sum += sbtSrc[6]);
-								*(dstPtr += stride) = (sum += sbtSrc[7]);
+								*(dstPtr += stride) = sum += sbtSrc[0];
+								*(dstPtr += stride) = sum += sbtSrc[1];
+								*(dstPtr += stride) = sum += sbtSrc[2];
+								*(dstPtr += stride) = sum += sbtSrc[3];
+								*(dstPtr += stride) = sum += sbtSrc[4];
+								*(dstPtr += stride) = sum += sbtSrc[5];
+								*(dstPtr += stride) = sum += sbtSrc[6];
+								*(dstPtr += stride) = sum += sbtSrc[7];
 							}
 						}
 						else if (bps == 12) // Medium Lossless or Full Lossy
 						{
-							uint* intPtr = (uint*)srcPtr;
+							int* intPtr = (int*)srcPtr;
 
 							for (int ch = 0; ch < run.Count; ++ch, intPtr += 3)
 							{
-								uint p0 = intPtr[0];
-								uint p1 = intPtr[1];
-								uint p2 = intPtr[2];
+								long p0 = *(long*)intPtr;
+								int p1 = intPtr[2];
 
-								*(dstPtr += stride) = (sum += (short)((int)(( p0 >>  0              ) & 0xFFF) - 2048));
-								*(dstPtr += stride) = (sum += (short)((int)(( p0 >> 12              ) & 0xFFF) - 2048));
-								*(dstPtr += stride) = (sum += (short)((int)(((p0 >> 24) | (p1 <<  8)) & 0xFFF) - 2048));
-								*(dstPtr += stride) = (sum += (short)((int)(( p1 >>  4              ) & 0xFFF) - 2048));
-								*(dstPtr += stride) = (sum += (short)((int)(( p1 >> 16              ) & 0xFFF) - 2048));
-								*(dstPtr += stride) = (sum += (short)((int)(((p1 >> 28) | (p2 <<  4)) & 0xFFF) - 2048));
-								*(dstPtr += stride) = (sum += (short)((int)(( p2 >>  8              ) & 0xFFF) - 2048));
-								*(dstPtr += stride) = (sum += (short)((int)(( p2 >> 20              ) & 0xFFF) - 2048));
+								*(dstPtr += stride) = sum += (short)( (p0 << 52) >> 52);
+								*(dstPtr += stride) = sum += (short)( (p0 << 40) >> 52);
+								*(dstPtr += stride) = sum += (short)( (p0 << 28) >> 52);
+								*(dstPtr += stride) = sum += (short)( (p0 << 16) >> 52);
+								*(dstPtr += stride) = sum += (short)( (p0 <<  4) >> 52);
+#pragma warning disable CS0675 // Bitwise-or operator used on a sign-extended operand
+								*(dstPtr += stride) = sum += (short)(((p0 >> 60) & 0xF) | ((p1 << 24) >> 20));
+#pragma warning restore CS0675 // Bitwise-or operator used on a sign-extended operand
+								*(dstPtr += stride) = sum += (short)( (p1 << 12) >> 20);
+								*(dstPtr += stride) = sum += (short)( (p1 <<  0) >> 20);
 							}
 						}
 						else // Full Lossless (16 bps)
@@ -155,14 +156,14 @@ namespace SMAL.RLAD
 
 							for (int ch = 0; ch < run.Count; ++ch, srtSrc += 8)
 							{
-								*(dstPtr += stride) = (sum += srtSrc[0]);
-								*(dstPtr += stride) = (sum += srtSrc[1]);
-								*(dstPtr += stride) = (sum += srtSrc[2]);
-								*(dstPtr += stride) = (sum += srtSrc[3]);
-								*(dstPtr += stride) = (sum += srtSrc[4]);
-								*(dstPtr += stride) = (sum += srtSrc[5]);
-								*(dstPtr += stride) = (sum += srtSrc[6]);
-								*(dstPtr += stride) = (sum += srtSrc[7]);
+								*(dstPtr += stride) = sum += srtSrc[0];
+								*(dstPtr += stride) = sum += srtSrc[1];
+								*(dstPtr += stride) = sum += srtSrc[2];
+								*(dstPtr += stride) = sum += srtSrc[3];
+								*(dstPtr += stride) = sum += srtSrc[4];
+								*(dstPtr += stride) = sum += srtSrc[5];
+								*(dstPtr += stride) = sum += srtSrc[6];
+								*(dstPtr += stride) = sum += srtSrc[7];
 							}
 						}
 

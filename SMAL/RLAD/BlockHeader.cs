@@ -28,7 +28,6 @@ namespace SMAL.RLAD
 		public ushort DataSize;
 		
 		private fixed byte _counts[MAX_CHANNELS];
-		private fixed short _seeds[MAX_CHANNELS];
 		private fixed byte _headers[MAX_RUNS_PER_CHANNEL * MAX_CHANNELS];
 		#endregion // Fields
 
@@ -38,18 +37,8 @@ namespace SMAL.RLAD
 		/// <param name="channel">The channel to get, must be in the range [0, 7].</param>
 		/// <returns>The run headers for the channel data.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Span<RunHeader> GetChannelHeaders(byte channel) => (channel < 8)
+		public Span<RunHeader> GetChannelHeaders(byte channel) => (channel < MAX_CHANNELS)
 			? new Span<RunHeader>(Unsafe.AsPointer(ref _headers[channel * MAX_RUNS_PER_CHANNEL]), _counts[channel])
-			: throw new ArgumentOutOfRangeException(nameof(channel));
-
-		/// <summary>
-		/// Gets the seed value (initial sample amplitude) for the passed channel index.
-		/// </summary>
-		/// <param name="channel">The channel to get, must be in the range [0, 7].</param>
-		/// <returns>The seed value for the channel.</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public short GetChannelSeed(byte channel) => (channel < 8)
-			? _seeds[channel]
 			: throw new ArgumentOutOfRangeException(nameof(channel));
 
 		/// <summary>
@@ -71,12 +60,6 @@ namespace SMAL.RLAD
 			block.BlockSize = header[0];
 			block.DataSize = header[1];
 			read += 4;
-
-			// Read the sample seeds
-			var seeds = new Span<short>(Unsafe.AsPointer(ref block._seeds[0]), (int)channels);
-			if (stream.Read(seeds.AsBytesUnsafe()) != (seeds.Length * 2))
-				throw new IncompleteHeaderException("RLAD block - channel seed values");
-			read += ((uint)channels * 2);
 
 			// Read the run counts
 			var counts = new Span<byte>(Unsafe.AsPointer(ref block._counts[0]), (int)channels);
@@ -114,11 +97,6 @@ namespace SMAL.RLAD
 			header[1] = block.DataSize;
 			stream.Write(header.AsBytesUnsafe());
 			written += 4;
-
-			// Write the sample seeds
-			var seeds = new ReadOnlySpan<short>(Unsafe.AsPointer(ref block._seeds[0]), (int)channels);
-			stream.Write(seeds.AsBytesUnsafe());
-			written += ((uint)channels * 2);
 
 			// Write the run counts
 			var counts = new ReadOnlySpan<byte>(Unsafe.AsPointer(ref block._counts[0]), (int)channels);
