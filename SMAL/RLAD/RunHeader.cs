@@ -29,7 +29,7 @@ namespace SMAL.RLAD
 		/// <summary>
 		/// The total number of chunks (8-sample groups) in the run.
 		/// </summary>
-		public readonly int Count => (Value & 0x3F) + 1;
+		public readonly int Extra => (Value & 0x3F) + 1;
 		/// <summary>
 		/// The total number of samples in the run (chunk count * 8).
 		/// </summary>
@@ -40,10 +40,10 @@ namespace SMAL.RLAD
 		/// Creates a new header from the given type and chunk count.
 		/// </summary>
 		/// <param name="type">The chunk type.</param>
-		/// <param name="count">The chunk count.</param>
+		/// <param name="extra">The extra chunk count.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public RunHeader(int type, int count) =>
-			Value = (byte)(((type & 0x03) << 6) | (count & 0x3F));
+		public RunHeader(int type, int extra) =>
+			Value = (byte)(((type & 0x03) << 6) | (extra & 0x3F));
 
 		/// <summary>
 		/// Creates a new header from a raw value.

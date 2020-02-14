@@ -14,14 +14,16 @@ namespace SMAL.RLAD
 	/// </summary>
 	public unsafe struct BlockHeader
 	{
-		private const int MAX_RUNS_PER_CHANNEL = 64; // 512 samples / 8 samples per run
-		private const int MAX_CHANNELS = 8;
+		/// <summary>
+		/// The maximum number of runs in a channel within a single block.
+		/// </summary>
+		public const int MAX_RUNS_PER_CHANNEL = 64; // 512 samples / 8 samples per run
+		/// <summary>
+		/// The maximum number of channels supported in a block.
+		/// </summary>
+		public const int MAX_CHANNELS = 8;
 
 		#region Fields
-		/// <summary>
-		/// The total size of the block (including all headers) in bytes.
-		/// </summary>
-		public ushort BlockSize;
 		/// <summary>
 		/// The total size of the compressed audio data in the block, in bytes.
 		/// </summary>
@@ -35,11 +37,28 @@ namespace SMAL.RLAD
 		/// Gets the run headers for the passed channel index.
 		/// </summary>
 		/// <param name="channel">The channel to get, must be in the range [0, 7].</param>
+		/// <param name="all">If the span should contain all possible run headers for the channel.</param>
 		/// <returns>The run headers for the channel data.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Span<RunHeader> GetChannelHeaders(byte channel) => (channel < MAX_CHANNELS)
-			? new Span<RunHeader>(Unsafe.AsPointer(ref _headers[channel * MAX_RUNS_PER_CHANNEL]), _counts[channel])
+		public Span<RunHeader> GetChannelHeaders(byte channel, bool all = false) => (channel < MAX_CHANNELS)
+			? new Span<RunHeader>(
+				Unsafe.AsPointer(ref _headers[channel * MAX_RUNS_PER_CHANNEL]), all ? MAX_RUNS_PER_CHANNEL : _counts[channel])
 			: throw new ArgumentOutOfRangeException(nameof(channel));
+
+		/// <summary>
+		/// Gets the number of runs in the channel.
+		/// </summary>
+		/// <param name="channel">The channel to get.</param>
+		public byte GetChannelCount(byte channel) =>
+			_counts[(channel < MAX_CHANNELS) ? channel : throw new ArgumentOutOfRangeException(nameof(channel))];
+
+		/// <summary>
+		/// Sets the number of runs in the channel.
+		/// </summary>
+		/// <param name="channel">The channel to set.</param>
+		/// <param name="count">The number of runs</param>
+		public void SetChannelCount(byte channel, byte count) =>
+			_counts[(channel < MAX_CHANNELS) ? channel : throw new ArgumentOutOfRangeException(nameof(channel))] = count;
 
 		/// <summary>
 		/// Parses an RLAD block header from the stream.
@@ -54,12 +73,11 @@ namespace SMAL.RLAD
 			uint read = 0;
 
 			// Read the header
-			Span<ushort> header = stackalloc ushort[2];
-			if (stream.Read(header.AsBytesUnsafe()) != 4)
-				throw new IncompleteHeaderException("RLAD block - block sizes");
-			block.BlockSize = header[0];
-			block.DataSize = header[1];
-			read += 4;
+			Span<ushort> header = stackalloc ushort[1];
+			if (stream.Read(header.AsBytesUnsafe()) != 2)
+				throw new IncompleteHeaderException("RLAD block - data size");
+			block.DataSize = header[0];
+			read += 2;
 
 			// Read the run counts
 			var counts = new Span<byte>(Unsafe.AsPointer(ref block._counts[0]), (int)channels);
@@ -92,11 +110,10 @@ namespace SMAL.RLAD
 			uint written = 0;
 
 			// Write the header
-			Span<ushort> header = stackalloc ushort[2];
-			header[0] = block.BlockSize;
-			header[1] = block.DataSize;
+			Span<ushort> header = stackalloc ushort[1];
+			header[0] = block.DataSize;
 			stream.Write(header.AsBytesUnsafe());
-			written += 4;
+			written += 2;
 
 			// Write the run counts
 			var counts = new ReadOnlySpan<byte>(Unsafe.AsPointer(ref block._counts[0]), (int)channels);
