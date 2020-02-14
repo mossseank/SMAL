@@ -22,10 +22,10 @@ namespace SMAL
 		/// format.
 		/// </summary>
 		/// <param name="buffer">
-		/// The buffer to fill with samples. Its length will be rounded down to the nearest multiple of 
-		/// <see cref="ChannelCount"/>, if needed.
+		/// The buffer to fill with samples. It is undefined behavior if the sample count is not a multiple of
+		/// <see cref="ChannelCount"/>.
 		/// </param>
-		/// <returns>The actual number of samples placed into the buffer.</returns>
+		/// <returns>The actual number of frames placed into the buffer.</returns>
 		uint GetSamples(Span<short> buffer);
 
 		/// <summary>
@@ -33,10 +33,10 @@ namespace SMAL
 		/// point LPCM format.
 		/// </summary>
 		/// <param name="buffer">
-		/// The buffer to fill with samples. Its length will be rounded down to the nearest multiple of 
-		/// <see cref="ChannelCount"/>, if needed.
+		/// The buffer to fill with samples. It is undefined behavior if the sample count is not a multiple of
+		/// <see cref="ChannelCount"/>.
 		/// </param>
-		/// <returns>The actual number of samples placed into the buffer.</returns>
+		/// <returns>The actual number of frames placed into the buffer.</returns>
 		uint GetSamples(Span<float> buffer);
 	}
 }

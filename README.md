@@ -16,10 +16,8 @@ The goals of this project can be summarized as:
 In order to keep the implementation simple and straitforward, some limitations are introduced:
 
 1. Audio streams will not support arbitrary seeking, only forward reading.
-2. For the Wave format, only common encodings (e.g. PCM and IEEE) are supported.
-3. All audio samples are decoded into signed 16-bit integer or normalized IEEE 32-bit float interleaved LPCM.
-4. Minimal checks are done for file validity - it is assumed that files are well structured and standard compliant.
-5. Metadata (artist, title, ect...) is not loaded, and will not be written by encoders. This is planned for a future version.
+2. Minimal checks are done for file validity - it is assumed that files are well structured and standard compliant.
+3. Metadata (artist, title, ect...) is not loaded, and will not be written by encoders. This is planned for a future version.
 
 ## Format Support
 
@@ -46,3 +44,11 @@ Support matrix for container file formats:
 |**RLAD**|RLAD|*Planned*|*Planned*|
 
 This is the core set of planned formats. Pull requests are encouraged to add support for more formats, or to help implement or augment existing formats. Only formats that are unencumbered by restrictive licenses and patents will be accepted.
+
+## Other Features
+
+In addition to audio decoders and encoders, SMAL provides a few other utility and nice-to-have features:
+
+* **Generators** - Types are provided to generate sine, triangular, and saw-tooth tones, as well as tone combinations.
+* **Converters** - Conversion between different PCM sample types using fast hardware instructions.
+* **Mux/Demux** - Ability to interleave and de-interleave samples.
