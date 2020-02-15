@@ -12,21 +12,19 @@ using SMAL;
 namespace Tests
 {
 	// Performs testing for sample conversion functions
-	public class Conversion
+	public class ConversionTests
 	{
 		private const int SAMPLE_COUNT = 2 << 16;
-		private static readonly short[] SHORT_SAMPLES;
-		private static readonly float[] FLOAT_SAMPLES;
+		private static readonly short[] SHORT_SAMPLES = new short[SAMPLE_COUNT];
+		private static readonly float[] FLOAT_SAMPLES = new float[SAMPLE_COUNT];
 		private static readonly string AVX_FLAG_NAME = "_AllowAVX";
 		private static readonly string SSE_FLAG_NAME = "_AllowSSE";
 		private static readonly FieldInfo _AvxField;
 		private static readonly FieldInfo _SseField;
 
-		static Conversion()
+		static ConversionTests()
 		{
 			// Make the test samples
-			SHORT_SAMPLES = new short[SAMPLE_COUNT];
-			FLOAT_SAMPLES = new float[SAMPLE_COUNT];
 			var rand = new Random();
 			for (int i = 0; i < SAMPLE_COUNT; ++i)
 			{
@@ -57,9 +55,8 @@ namespace Tests
 				SampleUtils.Convert(conv, ret);
 
 				var badIdx = SampleCheck.FindDivergentIndex(SHORT_SAMPLES, ret);
-				Assert.True(!badIdx.HasValue, 
-					$"AVX short->float failed at {badIdx.GetValueOrDefault(0)} " +
-					$"(e: {SHORT_SAMPLES[badIdx.GetValueOrDefault(0)]}, a: {ret[badIdx.GetValueOrDefault(0)]})");
+				Assert.True(badIdx.GetValueOrDefault(0) is var bi && !badIdx.HasValue, 
+					$"AVX short->float failed at {bi} (e: {SHORT_SAMPLES[bi]}, a: {ret[bi]})");
 			}
 			else Console.WriteLine("Conversion.ShortToFloat - skipping AVX test.");
 
@@ -74,9 +71,8 @@ namespace Tests
 				SampleUtils.Convert(conv, ret);
 
 				var badIdx = SampleCheck.FindDivergentIndex(SHORT_SAMPLES, ret);
-				Assert.True(!badIdx.HasValue,
-					$"SSE short->float failed at {badIdx.GetValueOrDefault(0)} " +
-					$"(e: {SHORT_SAMPLES[badIdx.GetValueOrDefault(0)]}, a: {ret[badIdx.GetValueOrDefault(0)]})");
+				Assert.True(badIdx.GetValueOrDefault(0) is var bi && !badIdx.HasValue,
+					$"SSE short->float failed at {bi} (e: {SHORT_SAMPLES[bi]}, a: {ret[bi]})");
 			}
 			else Console.WriteLine("Conversion.ShortToFloat - skipping SSE test.");
 
@@ -90,9 +86,8 @@ namespace Tests
 				SampleUtils.Convert(conv, ret);
 
 				var badIdx = SampleCheck.FindDivergentIndex(SHORT_SAMPLES, ret);
-				Assert.True(!badIdx.HasValue,
-					$"Fallback short->float failed at {badIdx.GetValueOrDefault(0)} " +
-					$"(e: {SHORT_SAMPLES[badIdx.GetValueOrDefault(0)]}, a: {ret[badIdx.GetValueOrDefault(0)]})");
+				Assert.True(badIdx.GetValueOrDefault(0) is var bi && !badIdx.HasValue,
+					$"Fallback short->float failed at {bi} (e: {SHORT_SAMPLES[bi]}, a: {ret[bi]})");
 			}
 		}
 
@@ -113,9 +108,8 @@ namespace Tests
 				SampleUtils.Convert(conv, ret);
 
 				var badIdx = SampleCheck.FindDivergentIndex(FLOAT_SAMPLES, ret);
-				Assert.True(!badIdx.HasValue,
-					$"AVX float->short failed at {badIdx.GetValueOrDefault(0)} " +
-					$"(e: {FLOAT_SAMPLES[badIdx.GetValueOrDefault(0)]}, a: {ret[badIdx.GetValueOrDefault(0)]})");
+				Assert.True(badIdx.GetValueOrDefault(0) is var bi && !badIdx.HasValue,
+					$"AVX float->short failed at {bi} (e: {FLOAT_SAMPLES[bi]}, a: {ret[bi]})");
 			}
 			else Console.WriteLine("Conversion.FloatToShort - skipping AVX test.");
 
@@ -130,9 +124,8 @@ namespace Tests
 				SampleUtils.Convert(conv, ret);
 
 				var badIdx = SampleCheck.FindDivergentIndex(FLOAT_SAMPLES, ret);
-				Assert.True(!badIdx.HasValue,
-					$"SSE float->short failed at {badIdx.GetValueOrDefault(0)} " +
-					$"(e: {FLOAT_SAMPLES[badIdx.GetValueOrDefault(0)]}, a: {ret[badIdx.GetValueOrDefault(0)]})");
+				Assert.True(badIdx.GetValueOrDefault(0) is var bi && !badIdx.HasValue,
+					$"SSE float->short failed at {bi} (e: {FLOAT_SAMPLES[bi]}, a: {ret[bi]})");
 			}
 			else Console.WriteLine("Conversion.FloatToShort - skipping SSE test.");
 
@@ -146,9 +139,8 @@ namespace Tests
 				SampleUtils.Convert(conv, ret);
 
 				var badIdx = SampleCheck.FindDivergentIndex(FLOAT_SAMPLES, ret);
-				Assert.True(!badIdx.HasValue,
-					$"Fallback float->short failed at {badIdx.GetValueOrDefault(0)} " +
-					$"(e: {FLOAT_SAMPLES[badIdx.GetValueOrDefault(0)]}, a: {ret[badIdx.GetValueOrDefault(0)]})");
+				Assert.True(badIdx.GetValueOrDefault(0) is var bi && !badIdx.HasValue,
+					$"Fallback float->short failed at {bi} (e: {FLOAT_SAMPLES[bi]}, a: {ret[bi]})");
 			}
 		}
 	}

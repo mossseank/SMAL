@@ -10,6 +10,7 @@ namespace Tests
 	// Utilities for checking audio sample values
 	internal static class SampleCheck
 	{
+		private const float EPSILON = 2 * Single.Epsilon;
 		// Difference of 2 steps allowed for conversion between formats, and then back
 		private const float FLOAT_ROUNDING_ERROR = 2f / UInt16.MaxValue;
 		private const int SHORT_ROUNDING_ERROR = 2;
@@ -21,7 +22,7 @@ namespace Tests
 			for (int i = 0; i < len; ++i)
 			{
 				float diff = Math.Abs(l[i] - r[i]);
-				if (diff <= Single.Epsilon)
+				if (diff <= EPSILON)
 					continue;
 				if (allowRoundingError && (diff <= FLOAT_ROUNDING_ERROR))
 					continue;

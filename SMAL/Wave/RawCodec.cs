@@ -45,13 +45,11 @@ namespace SMAL.Wave
 
 		protected override uint Decode(Span<byte> src, Span<byte> dst, uint frameCount, bool isFloat)
 		{
-			// Slice the source to the expected size
 			uint decodeCount = Math.Min(frameCount, (uint)src.Length / _frameSize);
-			src = src.Slice(0, (int)(decodeCount * _frameSize));
 
-			// Split based on encoding type
 			if (Encoding == AudioEncoding.Pcm)
 			{
+				src = src.Slice(0, (int)(decodeCount * 2));
 				if (isFloat) // short -> float
 					SampleUtils.Convert(src.UnsafeCast<short>(), dst.UnsafeCast<float>());
 				else // short -> short
@@ -59,6 +57,7 @@ namespace SMAL.Wave
 			}
 			else if (Encoding == AudioEncoding.IeeeFloat)
 			{
+				src = src.Slice(0, (int)(decodeCount * 4));
 				if (isFloat) // float -> float
 					src.UnsafeCast<float>().CopyTo(dst.UnsafeCast<float>());
 				else // float -> short
@@ -72,13 +71,11 @@ namespace SMAL.Wave
 
 		protected override uint Encode(Span<byte> src, Span<byte> dst, uint frameCount, bool isFloat)
 		{
-			// Slice the source to the expected size
 			uint encodeCount = Math.Min(frameCount, (uint)dst.Length / _frameSize);
-			src = src.Slice(0, (int)(encodeCount * _frameSize));
 
-			// Split based on encoding type
 			if (isFloat)
 			{
+				src = src.Slice(0, (int)(encodeCount * 4));
 				if (Encoding == AudioEncoding.IeeeFloat) // float -> float
 					src.UnsafeCast<float>().CopyTo(dst.UnsafeCast<float>());
 				else if (Encoding == AudioEncoding.Pcm) // float -> short
@@ -88,6 +85,7 @@ namespace SMAL.Wave
 			}
 			else
 			{
+				src = src.Slice(0, (int)(encodeCount * 2));
 				if (Encoding == AudioEncoding.IeeeFloat) // short -> float
 					SampleUtils.Convert(src.UnsafeCast<short>(), dst.UnsafeCast<float>());
 				else if (Encoding == AudioEncoding.Pcm) // short -> short
