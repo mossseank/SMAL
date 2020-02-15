@@ -15,6 +15,10 @@ namespace SMAL
 	/// </summary>
 	public static class SampleUtils
 	{
+		// Used for testing
+		private static bool _AllowAVX = true;
+		private static bool _AllowSSE = true;
+
 		/// <summary>
 		/// Converts a span of signed 16-bit integer samples into normalized 32-bit floating point samples.
 		/// <para>
@@ -35,7 +39,7 @@ namespace SMAL
 				uint offset = 0;
 				var scale32 = 1f/32_767f;
 
-				if (Avx2.IsSupported) // x86 processors since 2013 (intel) and 2015 (amd)
+				if (Avx2.IsSupported && _AllowAVX) // x86 processors since 2013 (intel) and 2015 (amd)
 				{
 					var scale256 = Vector256.Create(scale32);
 					while ((offset + 8) < total)
@@ -47,7 +51,7 @@ namespace SMAL
 						offset += 8;
 					}
 				}
-				else if (Sse2.IsSupported) // All other x86 - .Net Core 3 requires SSE2
+				else if (Sse2.IsSupported && _AllowSSE) // All other x86 - .Net Core 3 requires SSE2
 				{
 					var scale128 = Vector128.Create(scale32);
 					while ((offset + 8) < total)
@@ -109,7 +113,7 @@ namespace SMAL
 				uint offset = 0;
 				var scale32 = 32_767f;
 
-				if (Avx.IsSupported) // x86 processors since 2011
+				if (Avx.IsSupported && _AllowAVX) // x86 processors since 2011
 				{
 					var scale256 = Vector256.Create(scale32);
 					while ((offset + 8) < total)
@@ -122,7 +126,7 @@ namespace SMAL
 						offset += 8;
 					}
 				}
-				else if (Sse2.IsSupported) // All other x86 - .Net Core 3 requires SSE2
+				else if (Sse2.IsSupported && _AllowSSE) // All other x86 - .Net Core 3 requires SSE2
 				{
 					var scale128 = Vector128.Create(scale32);
 					while ((offset + 8) < total)
