@@ -18,6 +18,12 @@ namespace SMAL
 		AudioChannels Channels { get; }
 
 		/// <summary>
+		/// The sampling rate for the produced audio data. <see cref="Nullable{T}.HasValue"/> will be <c>false</c> for
+		/// sources that do not have a set sampling rate, or do not generate data dependent on a sampling rate.
+		/// </summary>
+		uint? SampleRate { get; }
+
+		/// <summary>
 		/// Attempts to fill the buffer with the next set of available audio samples, in signed 16-bit integer LPCM
 		/// format.
 		/// </summary>
