@@ -13,9 +13,9 @@ namespace SMAL
 	public interface ISampleSink
 	{
 		/// <summary>
-		/// The number of channels of audio data consumed by this source.
+		/// The channel set for audio data consumed by this source.
 		/// </summary>
-		uint ChannelCount { get; }
+		AudioChannels Channels { get; }
 
 		/// <summary>
 		/// Attempts to consume 16-bit signed integer LPCM samples from the buffer.

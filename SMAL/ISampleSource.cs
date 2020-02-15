@@ -13,9 +13,9 @@ namespace SMAL
 	public interface ISampleSource
 	{
 		/// <summary>
-		/// The number of channels of audio data produced by this source.
+		/// The channel set for audio data produced by this source.
 		/// </summary>
-		uint ChannelCount { get; }
+		AudioChannels Channels { get; }
 
 		/// <summary>
 		/// Attempts to fill the buffer with the next set of available audio samples, in signed 16-bit integer LPCM

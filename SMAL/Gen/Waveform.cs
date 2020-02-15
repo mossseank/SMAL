@@ -17,6 +17,10 @@ namespace SMAL.Gen
 		/// </summary>
 		Sine,
 		/// <summary>
+		/// A signal that alternates between constant max and min values.
+		/// </summary>
+		Square,
+		/// <summary>
 		/// A repeating cycle linearly increasing and decreasing segments, creating a "zig-zag" pattern.
 		/// </summary>
 		Triangular,
