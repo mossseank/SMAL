@@ -29,7 +29,7 @@ namespace SMAL.RLAD
 		/// <summary>
 		/// The total number of chunks (8-sample groups) in the run.
 		/// </summary>
-		public readonly int Extra => (Value & 0x3F) + 1;
+		public readonly int Count => (Value & 0x3F) + 1;
 		/// <summary>
 		/// The total number of samples in the run (chunk count * 8).
 		/// </summary>
@@ -57,5 +57,10 @@ namespace SMAL.RLAD
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator RunHeader (byte value) => new RunHeader(value);
+
+		public override string ToString() => $"{{T:{Type} C:{Count}}}";
+
+		public static bool operator == (RunHeader l, RunHeader r) => l.Value == r.Value;
+		public static bool operator != (RunHeader l, RunHeader r) => l.Value != r.Value;
 	}
 }

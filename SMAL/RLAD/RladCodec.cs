@@ -91,7 +91,7 @@ namespace SMAL.RLAD
 
 						if (bps == 2) // Tiny Lossy
 						{
-							for (int ch = 0; ch < run.Extra; ++ch)
+							for (int ch = 0; ch < run.Count; ++ch)
 							{
 								short p0 = *((short*)srcPtr + ch);
 
@@ -107,7 +107,7 @@ namespace SMAL.RLAD
 						}
 						else if (bps == 4) // Tiny Lossless or Small Lossy
 						{
-							for (int ch = 0; ch < run.Extra; ++ch)
+							for (int ch = 0; ch < run.Count; ++ch)
 							{
 								int p0 = *((int*)srcPtr + ch);
 
@@ -125,7 +125,7 @@ namespace SMAL.RLAD
 						{
 							sbyte* sbtSrc = (sbyte*)srcPtr;
 
-							for (int ch = 0; ch < run.Extra; ++ch, sbtSrc += 8)
+							for (int ch = 0; ch < run.Count; ++ch, sbtSrc += 8)
 							{
 								*(dstPtr += stride) = sum += sbtSrc[0];
 								*(dstPtr += stride) = sum += sbtSrc[1];
@@ -141,7 +141,7 @@ namespace SMAL.RLAD
 						{
 							int* intPtr = (int*)srcPtr;
 
-							for (int ch = 0; ch < run.Extra; ++ch, intPtr += 3)
+							for (int ch = 0; ch < run.Count; ++ch, intPtr += 3)
 							{
 								long p0 = *(long*)intPtr;
 								int p1 = intPtr[2];
@@ -162,7 +162,7 @@ namespace SMAL.RLAD
 						{
 							short* srtSrc = (short*)srcPtr;
 
-							for (int ch = 0; ch < run.Extra; ++ch, srtSrc += 8)
+							for (int ch = 0; ch < run.Count; ++ch, srtSrc += 8)
 							{
 								*(dstPtr += stride) = sum += srtSrc[0];
 								*(dstPtr += stride) = sum += srtSrc[1];
@@ -175,7 +175,7 @@ namespace SMAL.RLAD
 							}
 						}
 
-						srcPtr += (uint)(bps * run.Extra); // Move down the source data
+						srcPtr += (uint)(bps * run.Count); // Move down the source data
 					}
 				}
 			}
@@ -247,13 +247,14 @@ namespace SMAL.RLAD
 				uint count = 0;
 
 				fixed (short* sampPtr = isFloat ? ShortBuffer : src.UnsafeCast<short>())
+				fixed (short* dstPtr = ShortBuffer)
 				{
 					if (Avx2.IsSupported)
 					{
 						while ((count + 16) <= total)
 						{
 							Vector256<short>* samp = (Vector256<short>*)(sampPtr + count);
-							Avx.Store(sampPtr + count, Avx2.ShiftRightArithmetic(*samp, 4));
+							Avx.Store(dstPtr + count, Avx2.ShiftRightArithmetic(*samp, 4));
 							count += 16;
 						}
 					}
@@ -262,7 +263,7 @@ namespace SMAL.RLAD
 						while ((count + 8) <= total)
 						{
 							Vector128<short>* samp = (Vector128<short>*)(sampPtr + count);
-							Sse2.Store(sampPtr + count, Sse2.ShiftRightArithmetic(*samp, 4));
+							Sse2.Store(dstPtr + count, Sse2.ShiftRightArithmetic(*samp, 4));
 							count += 8;
 						}
 					}
@@ -270,14 +271,14 @@ namespace SMAL.RLAD
 					{
 						while (count < total)
 						{
-							sampPtr[count++] >>= 4;
-							sampPtr[count++] >>= 4;
-							sampPtr[count++] >>= 4;
-							sampPtr[count++] >>= 4;
-							sampPtr[count++] >>= 4;
-							sampPtr[count++] >>= 4;
-							sampPtr[count++] >>= 4;
-							sampPtr[count++] >>= 4;
+							dstPtr[count] = (short)(sampPtr[count++] >> 4);
+							dstPtr[count] = (short)(sampPtr[count++] >> 4);
+							dstPtr[count] = (short)(sampPtr[count++] >> 4);
+							dstPtr[count] = (short)(sampPtr[count++] >> 4);
+							dstPtr[count] = (short)(sampPtr[count++] >> 4);
+							dstPtr[count] = (short)(sampPtr[count++] >> 4);
+							dstPtr[count] = (short)(sampPtr[count++] >> 4);
+							dstPtr[count] = (short)(sampPtr[count++] >> 4);
 						}
 					}
 				}
@@ -429,14 +430,22 @@ namespace SMAL.RLAD
 						short end = srcBase[off7];
 
 						// TODO - this can be done with intrinsics
-						short d0 = dstBase[off0] = (short)(srcBase[off0] - last);
-						short d1 = dstBase[off1] = (short)(srcBase[off1] - srcBase[off0]);
-						short d2 = dstBase[off2] = (short)(srcBase[off2] - srcBase[off1]);
-						short d3 = dstBase[off3] = (short)(srcBase[off3] - srcBase[off2]);
-						short d4 = dstBase[off4] = (short)(srcBase[off4] - srcBase[off3]);
-						short d5 = dstBase[off5] = (short)(srcBase[off5] - srcBase[off4]);
-						short d6 = dstBase[off6] = (short)(srcBase[off6] - srcBase[off5]);
-						short d7 = dstBase[off7] = (short)(srcBase[off7] - srcBase[off6]);
+						short d0 = (short)(srcBase[off0] - last);
+						short d1 = (short)(srcBase[off1] - srcBase[off0]);
+						short d2 = (short)(srcBase[off2] - srcBase[off1]);
+						short d3 = (short)(srcBase[off3] - srcBase[off2]);
+						short d4 = (short)(srcBase[off4] - srcBase[off3]);
+						short d5 = (short)(srcBase[off5] - srcBase[off4]);
+						short d6 = (short)(srcBase[off6] - srcBase[off5]);
+						short d7 = (short)(srcBase[off7] - srcBase[off6]);
+						dstBase[off0] = d0;
+						dstBase[off1] = d1;
+						dstBase[off2] = d2;
+						dstBase[off3] = d3;
+						dstBase[off4] = d4;
+						dstBase[off5] = d5;
+						dstBase[off6] = d6;
+						dstBase[off7] = d7;
 
 						bool	
 							full  = (d0 < fMin) || (d0 > fMax) ||

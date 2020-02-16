@@ -6,3 +6,6 @@ script:
   - cd ./SMAL
   - dotnet build -c Debug
   - dotnet build -c Release
+  - cd ../Tests
+  - dotnet build -c Release
+  - dotnet test
