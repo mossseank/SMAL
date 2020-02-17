@@ -9,7 +9,7 @@ using System.IO;
 namespace SMAL.Wave
 {
 	/// <summary>
-	/// Contains the set of information found within a RIFF stream for WAVE data.
+	/// Contains the set of information found within a RIFF stream for WAVE header data.
 	/// </summary>
 	public sealed class WaveHeader
 	{
