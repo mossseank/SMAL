@@ -18,10 +18,10 @@ namespace SMAL
 		AudioChannels Channels { get; }
 
 		/// <summary>
-		/// The sampling rate for the produced audio data. <see cref="Nullable{T}.HasValue"/> will be <c>false</c> for
-		/// sources that do not have a set sampling rate, or do not generate data dependent on a sampling rate.
+		/// The sampling rate for the produced audio data. Should be zero (0) for sources that are not tied to a
+		/// set sample rate.
 		/// </summary>
-		uint? SampleRate { get; }
+		uint SampleRate { get; }
 
 		/// <summary>
 		/// Attempts to fill the buffer with the next set of available audio samples, in signed 16-bit integer LPCM
@@ -29,7 +29,7 @@ namespace SMAL
 		/// </summary>
 		/// <param name="buffer">
 		/// The buffer to fill with samples. It is undefined behavior if the sample count is not a multiple of
-		/// <see cref="ChannelCount"/>.
+		/// <see cref="Channels"/>.
 		/// </param>
 		/// <returns>The actual number of frames placed into the buffer.</returns>
 		uint GetSamples(Span<short> buffer);
@@ -40,7 +40,7 @@ namespace SMAL
 		/// </summary>
 		/// <param name="buffer">
 		/// The buffer to fill with samples. It is undefined behavior if the sample count is not a multiple of
-		/// <see cref="ChannelCount"/>.
+		/// <see cref="Channels"/>.
 		/// </param>
 		/// <returns>The actual number of frames placed into the buffer.</returns>
 		uint GetSamples(Span<float> buffer);

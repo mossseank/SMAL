@@ -22,7 +22,7 @@ namespace SMAL
 		/// </summary>
 		/// <param name="buffer">
 		/// The buffer to pull samples from. It is undefined behavior if the sample count is not a multiple of
-		/// <see cref="ChannelCount"/>.
+		/// <see cref="Channels"/>.
 		/// </param>
 		/// <returns>The actual number of frames read from the buffer.</returns>
 		uint PutSamples(Span<short> buffer);
@@ -32,7 +32,7 @@ namespace SMAL
 		/// </summary>
 		/// <param name="buffer">
 		/// The buffer to pull samples from. It is undefined behavior if the sample count is not a multiple of
-		/// <see cref="ChannelCount"/>.
+		/// <see cref="Channels"/>.
 		/// </param>
 		/// <returns>The actual number of frames read from the buffer.</returns>
 		uint PutSamples(Span<float> buffer);

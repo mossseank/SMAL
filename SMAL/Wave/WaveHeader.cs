@@ -78,7 +78,7 @@ namespace SMAL.Wave
 				throw new BadFormatException("WAVE", "'fmt' chunk header not found");
 			var fmtCode = (ushort)(fmt[2] & 0xFFFF);
 			var channels = (ushort)((fmt[2] >> 16) & 0xFFFF);
-			var bps = (ushort)((fmt[5] >> 16) & 0xFFFF);
+			var byps = (ushort)((fmt[5] >> 16) & 0xFFFF) / 8;
 
 			// Discard any remaining "fmt " header fields
 			{
@@ -88,9 +88,9 @@ namespace SMAL.Wave
 			}
 
 			// Validate the format fields
-			var format = (fmtCode, bps) switch {
-				(FMT_PCM, 16) => AudioEncoding.Pcm,
-				(FMT_IEEEFLOAT, 32) => AudioEncoding.IeeeFloat,
+			var format = (fmtCode, byps) switch {
+				(FMT_PCM, 2) => AudioEncoding.Pcm,
+				(FMT_IEEEFLOAT, 4) => AudioEncoding.IeeeFloat,
 				_ => AudioEncoding.Unknown
 			};
 			if (!Enum.IsDefined(typeof(AudioChannels), (AudioChannels)channels))
@@ -123,7 +123,7 @@ namespace SMAL.Wave
 				Channels = (AudioChannels)channels,
 				SampleRate = fmt[3],
 				DataStart = dataStart,
-				FrameCount = (uint)(dataSize / (bps / 8) / channels)
+				FrameCount = (uint)(dataSize / byps / channels)
 			};
 		}
 
@@ -146,20 +146,20 @@ namespace SMAL.Wave
 			stream.Write(riff.AsBytesUnsafe());
 
 			// Write the fmt header
-			uint bps = (header.Format == AudioEncoding.Pcm) ? 2u : 4u;
+			uint byps = (header.Format == AudioEncoding.Pcm) ? 2u : 4u;
 			uint format = (header.Format == AudioEncoding.Pcm) ? FMT_PCM : FMT_IEEEFLOAT;
 			Span<uint> fmt = stackalloc uint[6] { 
 				TAG_FMT,
 				16,
 				((uint)header.Channels << 16) | format,
 				header.SampleRate,
-				header.SampleRate * (uint)header.Channels * bps,
-				((uint)header.Channels * bps) | ((bps * 8) << 16)
+				header.SampleRate * (uint)header.Channels * byps,
+				((uint)header.Channels * byps) | ((byps * 8) << 16)
 			};
 			stream.Write(fmt.AsBytesUnsafe());
 
 			// Write the data chunk header
-			Span<uint> data = stackalloc uint[2] { TAG_DATA, header.FrameCount * (uint)header.Channels * bps };
+			Span<uint> data = stackalloc uint[2] { TAG_DATA, header.FrameCount * (uint)header.Channels * byps };
 			stream.Read(data.AsBytesUnsafe());
 		}
 	}
