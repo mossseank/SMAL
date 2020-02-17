@@ -60,6 +60,10 @@ namespace SMAL.RLAD
 
 		public override string ToString() => $"{{T:{Type} C:{Count}}}";
 
+		public override bool Equals(object obj) => (obj is RunHeader o) && (o.Value == Value);
+
+		public override int GetHashCode() => Value.GetHashCode();
+
 		public static bool operator == (RunHeader l, RunHeader r) => l.Value == r.Value;
 		public static bool operator != (RunHeader l, RunHeader r) => l.Value != r.Value;
 	}
