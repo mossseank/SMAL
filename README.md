@@ -27,11 +27,11 @@ Support matrix for audio encoding formats:
 |:----:|:------:|:----:|:----:|
 |**Wave/RAW**|LPCM (16-bit)|v0.1|v0.1|
 ||IeeeFloat (32-bit)|v0.1|v0.1|
-||A-Law|*Planned*|*Planned*|
-||Mu-Law|*Planned*|*Planned*|
-|**Vorbis**|Vorbis|*Planned*|*Planned*|
-|**FLAC**|FLAC|*Planned*|*Planned*|
-|**Opus**|Opus|*Planned*|*Planned*|
+||A-Law|*Future*|-|
+||Mu-Law|*Future*|-|
+|**Vorbis**|Vorbis|*Future*|*Future*|
+|**FLAC**|FLAC|*Future*|*Future*|
+|**Opus**|Opus|*Future*|*Future*|
 |**[RLAD](https://github.com/mossseank/SMAL/wiki/RLAD)**|Lossless|v0.1|v0.1|
 ||Lossy|v0.1|v0.1|
 
@@ -39,9 +39,9 @@ Support matrix for container file formats:
 
 |Format|Encoding|Decode|Encode|
 |:----:|:------:|:----:|:----:|
-|**RIFF**|Wave/RAW|*Planned*|*Planned*|
-|**Ogg**|Vorbis, FLAC, Opus|*Planned*|*Planned*|
-|**RLAD**|RLAD|*Planned*|*Planned*|
+|**RIFF**|Wave/RAW|v0.1|*Future*|
+|**Ogg**|Vorbis, FLAC, Opus|*Future*|*Future*|
+|**RLAD**|RLAD|*Future*|*Future*|
 
 This is the core set of planned formats. Pull requests are encouraged to add support for more formats, or to help implement or augment existing formats. Only formats that are unencumbered by restrictive licenses and patents will be accepted.
 

@@ -112,13 +112,14 @@ namespace SMAL
 		/// </summary>
 		/// <param name="buffer">
 		/// The buffer to place the samples info. Will be rounded down to the previous multiple of
-		/// <see cref="ChannelCount"/>, if needed.
+		/// <see cref="ChannelCount"/>, or to <see cref="Remaining"/>, if needed.
 		/// </param>
 		/// <returns>The total number of frames read from the stream.</returns>
 		public uint GetSamples(Span<short> buffer)
 		{
 			// Validate and round
-			buffer = buffer.Slice(0, buffer.Length - (int)(buffer.Length % ChannelCount));
+			buffer = buffer.Slice(0, 
+				Math.Min(buffer.Length - (int)(buffer.Length % ChannelCount), (int)(Remaining * ChannelCount)));
 			uint frames = (uint)buffer.Length / ChannelCount;
 			if (frames == 0)
 				return 0;
@@ -150,13 +151,14 @@ namespace SMAL
 		/// </summary>
 		/// <param name="buffer">
 		/// The buffer to place the samples info. Will be rounded down to the previous multiple of
-		/// <see cref="ChannelCount"/>, if needed.
+		/// <see cref="ChannelCount"/>, or to <see cref="Remaining"/>, if needed.
 		/// </param>
 		/// <returns>The total number of frames read from the stream.</returns>
 		public uint GetSamples(Span<float> buffer)
 		{
 			// Validate and round
-			buffer = buffer.Slice(0, buffer.Length - (int)(buffer.Length % ChannelCount));
+			buffer = buffer.Slice(0, 
+				Math.Min(buffer.Length - (int)(buffer.Length % ChannelCount), (int)(Remaining * ChannelCount)));
 			uint frames = (uint)buffer.Length / ChannelCount;
 			if (frames == 0)
 				return 0;
