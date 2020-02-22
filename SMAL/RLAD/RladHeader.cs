@@ -28,9 +28,9 @@ namespace SMAL.Rlad
 		/// </summary>
 		public AudioChannels Channels;
 		/// <summary>
-		/// The size of the last run to trim (in 8-sample multiples) to get the true end of the audio data.
+		/// The number of frames in the last block.
 		/// </summary>
-		public byte TrimSize;
+		public ushort LastBlockFrames;
 		/// <summary>
 		/// The sample rate of the data.
 		/// </summary>
@@ -42,7 +42,7 @@ namespace SMAL.Rlad
 		/// <summary>
 		/// The total number of available audio frames.
 		/// </summary>
-		public uint FrameCount => (BlockCount * 512u) - (TrimSize * 8u);
+		public uint FrameCount => ((BlockCount - 1) * 512u) + LastBlockFrames;
 		#endregion // Fields
 
 		/// <summary>
@@ -75,12 +75,11 @@ namespace SMAL.Rlad
 			var channels = (AudioChannels)((header[1] >> 8) & 0xFF);
 			if (!Enum.IsDefined(typeof(AudioChannels), channels))
 				throw new BadFormatException("RLAD", $"invalid channel count {(int)channels}");
-			// MSB of header[1] unused for now - likely to be flag for metadata block in future
 
 			return new RladHeader {
 				Format = format,
 				Channels = channels,
-				TrimSize = (byte)((header[1] >> 16) & 0xFF),
+				LastBlockFrames = (ushort)((header[1] >> 16) & 0xFFFF),
 				SampleRate = header[2],
 				BlockCount = header[3]
 			};
@@ -103,10 +102,10 @@ namespace SMAL.Rlad
 			// Prepare the header
 			uint lossless = (header.Format == AudioEncoding.RLADLossy) ? VALUE_FALSE : VALUE_TRUE;
 			uint channels = ((uint)header.Channels << 8);
-			uint trim = ((uint)header.TrimSize << 16);
+			uint last = ((uint)header.LastBlockFrames << 16);
 			Span<uint> data = stackalloc uint[4] { 
 				TAG_RLAD,
-				(0 | trim | channels | lossless),
+				(last | channels | lossless),
 				header.SampleRate,
 				header.BlockCount
 			};

@@ -7,7 +7,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace SMAL.RLAD
+namespace SMAL.Rlad
 {
 	/// <summary>
 	/// Contains the one byte header for an RLAD sample run.

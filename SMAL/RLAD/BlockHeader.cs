@@ -7,7 +7,7 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 
-namespace SMAL.RLAD
+namespace SMAL.Rlad
 {
 	/// <summary>
 	/// Contains header information for an RLAD block within a stream.
@@ -23,11 +23,18 @@ namespace SMAL.RLAD
 		/// </summary>
 		public const int MAX_CHANNELS = 8;
 
+		private const ushort DATA_SIZE_MASK = 0x7FFF;
+		private const ushort LAST_FLAG_MASK = 0x8000;
+
 		#region Fields
 		/// <summary>
 		/// The total size of the compressed audio data in the block, in bytes.
 		/// </summary>
 		public ushort DataSize;
+		/// <summary>
+		/// If the block is the last block in the stream (MSB of data size is 1).
+		/// </summary>
+		public bool IsLastBlock;
 		
 		private fixed byte _counts[MAX_CHANNELS];
 		private fixed byte _headers[MAX_RUNS_PER_CHANNEL * MAX_CHANNELS];
@@ -76,7 +83,8 @@ namespace SMAL.RLAD
 			Span<ushort> header = stackalloc ushort[1];
 			if (stream.Read(header.AsBytesUnsafe()) != 2)
 				throw new IncompleteHeaderException("RLAD block - data size");
-			block.DataSize = header[0];
+			block.DataSize = (ushort)(header[0] & DATA_SIZE_MASK);
+			block.IsLastBlock = (header[0] & LAST_FLAG_MASK) > 0;
 			read += 2;
 
 			// Read the run counts
@@ -111,7 +119,7 @@ namespace SMAL.RLAD
 
 			// Write the header
 			Span<ushort> header = stackalloc ushort[1];
-			header[0] = block.DataSize;
+			header[0] = (ushort)((block.DataSize & DATA_SIZE_MASK) | (ushort)(block.IsLastBlock ? LAST_FLAG_MASK : 0));
 			stream.Write(header.AsBytesUnsafe());
 			written += 2;
 

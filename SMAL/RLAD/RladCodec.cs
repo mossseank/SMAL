@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 
-namespace SMAL.RLAD
+namespace SMAL.Rlad
 {
 	/// <summary>
 	/// Specialization of <see cref="AudioCodec"/> that can decode both lossy and lossless RLAD (Run-Length

@@ -5,7 +5,7 @@
  */
 using System;
 using Xunit;
-using SMAL.RLAD;
+using SMAL.Rlad;
 using SMAL;
 using System.Linq;
 using System.IO;
