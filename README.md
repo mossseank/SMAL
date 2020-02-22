@@ -41,7 +41,7 @@ Support matrix for container file formats:
 |:----:|:------:|:----:|:----:|
 |**RIFF**|Wave/RAW|v0.1|*Future*|
 |**Ogg**|Vorbis, FLAC, Opus|*Future*|*Future*|
-|**RLAD**|RLAD|*Future*|*Future*|
+|**RLAD**|RLAD|v0.1|*Future*|
 
 This is the core set of planned formats. Pull requests are encouraged to add support for more formats, or to help implement or augment existing formats. Only formats that are unencumbered by restrictive licenses and patents will be accepted.
 

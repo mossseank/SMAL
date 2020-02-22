@@ -9,9 +9,10 @@ using System.IO;
 namespace SMAL.Wave
 {
 	/// <summary>
-	/// <see cref="AudioReader"/> specialization for reading audio data from a WAVE (.wav) file.
+	/// <see cref="AudioReader"/> specialization for reading audio data from a stream that contains WAVE (.wav) encoded
+	/// data.
 	/// </summary>
-	public sealed class WaveFileReader : AudioReader
+	public sealed class WaveReader : AudioReader
 	{
 		#region Fields
 		/// <inheritdoc/>
@@ -29,15 +30,15 @@ namespace SMAL.Wave
 		/// Creates a new reader for the file at the given path.
 		/// </summary>
 		/// <param name="path">The path to the WAVE file to load.</param>
-		public WaveFileReader(string path) :
+		public WaveReader(string path) :
 			this(File.OpenRead(path))
 		{ }
 
 		/// <summary>
-		/// Creates a new reader for the file opened in the stream.
+		/// Creates a new reader for the stream.
 		/// </summary>
-		/// <param name="stream">The file stream to load WAVE data from.</param>
-		public WaveFileReader(FileStream stream) :
+		/// <param name="stream">The stream to load WAVE data from.</param>
+		public WaveReader(Stream stream) :
 			base(stream, 0)
 		{
 			_header = WaveHeader.Read(stream);

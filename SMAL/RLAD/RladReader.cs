@@ -9,9 +9,10 @@ using System.IO;
 namespace SMAL.Rlad
 {
 	/// <summary>
-	/// <see cref="AudioReader"/> specialization for reading audio from an RLAD (.rlad) file.
+	/// <see cref="AudioReader"/> specialization for reading audio from a stream that contains RLAD (.rlad) encoded
+	/// data.
 	/// </summary>
-	public sealed class RladFileReader : AudioReader
+	public sealed class RladReader : AudioReader
 	{
 		private const uint CHANNEL_DATA_SIZE = 1024; // 512 samples of 2 byte data
 		private const uint FRAMES_PER_BLOCK = 512;
@@ -35,16 +36,16 @@ namespace SMAL.Rlad
 		/// <summary>
 		/// Creates a new reader for the file at the given path.
 		/// </summary>
-		/// <param name="path">The path to the WAVE file to load.</param>
-		public RladFileReader(string path) :
+		/// <param name="path">The path to the RLAD file to load.</param>
+		public RladReader(string path) :
 			this(File.OpenRead(path))
 		{ }
 
 		/// <summary>
-		/// Creates a new reader for the file opened in the stream.
+		/// Creates a new reader for the stream.
 		/// </summary>
-		/// <param name="stream">The file stream to load WAVE data from.</param>
-		public RladFileReader(FileStream stream) :
+		/// <param name="stream">The stream to load RLAD data from.</param>
+		public RladReader(Stream stream) :
 			base(stream, 0)
 		{
 			_header = RladHeader.Read(stream);
